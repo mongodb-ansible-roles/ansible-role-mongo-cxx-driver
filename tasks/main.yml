@@ -1,0 +1,41 @@
+---
+- name: Make sure prerequisite packages are installed
+  pacman:
+    name:
+      - git
+      - cmake
+      - make
+      - gcc
+      - python3
+      - libbson
+      - boost
+
+- name: Check if mongo-cxx-driver is already installed
+  stat:
+    path: /usr/lib/libmongocxx.so
+  register: libmongocxx
+
+- name: Clone mongo-cxx-driver
+  git:
+    repo: https://github.com/mongodb/mongo-cxx-driver.git
+    dest: /tmp/mongo-cxx-driver
+    version: "{{ mongo_cxx_driver_version }}"
+  when: not libmongocxx.stat.exists
+
+- name: Run cmake
+  command: cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/ -DCMAKE_CXX_STANDARD=17 -DBSONCXX_POLY_USE_BOOST=1 ../
+  args:
+    creates: /tmp/mongo-cxx-driver/build/CMakeCache.txt
+    chdir: /tmp/mongo-cxx-driver/build
+
+- name: Run make
+  make:
+    chdir: /tmp/mongo-cxx-driver/build
+  when: not libmongocxx.stat.exists
+
+- name: Run make install
+  become: true
+  make:
+    chdir: /tmp/mongo-cxx-driver/build
+    target: install
+  when: not libmongocxx.stat.exists

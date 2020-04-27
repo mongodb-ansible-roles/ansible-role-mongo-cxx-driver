@@ -8,4 +8,4 @@ testinfra_hosts = testinfra.utils.ansible_runner.AnsibleRunner(
 
 
 def test_host(host):
-    assert host.file("/etc/hosts").exists
+    assert host.file("/usr/lib/libmongocxx.so").exists
